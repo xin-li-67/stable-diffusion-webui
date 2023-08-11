@@ -21,6 +21,7 @@ config_unopenclip = os.path.join(sd_repo_configs_path, "v2-1-stable-unclip-h-inf
 config_inpainting = os.path.join(sd_configs_path, "v1-inpainting-inference.yaml")
 config_instruct_pix2pix = os.path.join(sd_configs_path, "instruct-pix2pix.yaml")
 config_alt_diffusion = os.path.join(sd_configs_path, "alt-diffusion-inference.yaml")
+config_taiyi = os.path.join(sd_configs_path, "taiyi-sd-inference-v1.yaml")
 
 
 def is_using_v_parameterization_for_sd2(state_dict):
@@ -98,6 +99,8 @@ def guess_model_config_from_state_dict(sd, filename):
 
     if sd.get('cond_stage_model.roberta.embeddings.word_embeddings.weight', None) is not None:
         return config_alt_diffusion
+    if sd.get('cond_stage_model.transformer.text_model.embeddings.word_embeddings.weight', None) is not None:
+        return config_taiyi
 
     return config_default
 

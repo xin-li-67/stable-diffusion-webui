@@ -6,7 +6,7 @@ import modules.textual_inversion.textual_inversion
 from modules import devices, sd_hijack_optimizations, shared, script_callbacks, errors, sd_unet
 from modules.hypernetworks import hypernetwork
 from modules.shared import cmd_opts
-from modules import sd_hijack_clip, sd_hijack_open_clip, sd_hijack_unet, sd_hijack_xlmr, xlmr
+from modules import sd_hijack_clip, sd_hijack_open_clip, sd_hijack_unet, sd_hijack_xlmr, sd_hijack_taiyi, taiyi, xlmr
 
 import ldm.modules.attention
 import ldm.modules.diffusionmodules.model
@@ -210,6 +210,11 @@ class StableDiffusionModelHijack:
             model_embeddings = m.cond_stage_model.roberta.embeddings
             model_embeddings.token_embedding = EmbeddingsWithFixes(model_embeddings.word_embeddings, self)
             m.cond_stage_model = sd_hijack_xlmr.FrozenXLMREmbedderWithCustomWords(m.cond_stage_model, self)
+    
+        elif type(m.cond_stage_model) == taiyi.TaiyiCLIPEmbedder:
+            model_embeddings = m.cond_stage_model.transformer.embeddings
+            model_embeddings.token_embedding = EmbeddingsWithFixes(model_embeddings.word_embeddings, self)
+            m.cond_stage_model = sd_hijack_taiyi.FrozenTaiyiEmbedderWithCustomWorkds(m.cond_stage_model, self)
 
         elif type(m.cond_stage_model) == ldm.modules.encoders.modules.FrozenCLIPEmbedder:
             model_embeddings = m.cond_stage_model.transformer.text_model.embeddings
@@ -218,7 +223,7 @@ class StableDiffusionModelHijack:
 
         elif type(m.cond_stage_model) == ldm.modules.encoders.modules.FrozenOpenCLIPEmbedder:
             m.cond_stage_model.model.token_embedding = EmbeddingsWithFixes(m.cond_stage_model.model.token_embedding, self)
-            m.cond_stage_model = sd_hijack_open_clip.FrozenOpenCLIPEmbedderWithCustomWords(m.cond_stage_model, self)
+            m.cond_stage_model = sd_hijack_open_clip.FrozenOpenCLIPEmbedderWithCustomWords(m.cond_stage_model, self)            
 
         apply_weighted_forward(m)
         if m.cond_stage_key == "edit":
@@ -245,7 +250,8 @@ class StableDiffusionModelHijack:
     def undo_hijack(self, m):
         if type(m.cond_stage_model) == sd_hijack_xlmr.FrozenXLMREmbedderWithCustomWords:
             m.cond_stage_model = m.cond_stage_model.wrapped
-
+        elif type(m.cond_stage_model) == taiyi.TaiyiCLIPEmbedder:
+            m.cond_stage_model = m.cond_stage_model.wrapped
         elif type(m.cond_stage_model) == sd_hijack_clip.FrozenCLIPEmbedderWithCustomWords:
             m.cond_stage_model = m.cond_stage_model.wrapped
 
